@@ -1,5 +1,6 @@
 import pygame, sys, os
 from view.components.button import Button
+from view.chose_number_of_player import chose_number_of_player
 
 
 def menu_loop(screen):
@@ -25,6 +26,7 @@ def menu_loop(screen):
     labels = ["Nouvelle Partie", "Charger Partie", "Contre IA", "Quitter"]
     actions = [
         lambda: print(">> Nouvelle partie"),
+        lambda: chose_number_of_player(screen),
         lambda: print(">> Charger"),
         lambda: print(">> IA"),
         lambda: sys.exit(),
