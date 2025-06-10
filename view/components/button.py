@@ -36,4 +36,5 @@ class Button:
                 self.current_color = self.base_color
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if self.rect.collidepoint(event.pos):
-                self.callback()
+                return self.callback()
+        return None

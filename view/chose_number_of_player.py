@@ -1,10 +1,8 @@
-import pygame, sys, os
+import pygame, os
 from view.components.button import Button
-from view.menu_screen import menu_loop
-from view.local_game_screen import local_game_loop
 
 
-def chose_number_of_player(screen):
+def chose_number_of_player(screen, *args, **kwargs):
     clock = pygame.time.Clock()
     width, height = screen.get_size()
 
@@ -29,7 +27,7 @@ def chose_number_of_player(screen):
             height=button_height,
             text=f"{i} Joueurs",
             font=font,
-            callback=lambda x=i: local_game_loop(screen, x),
+            callback=lambda x=i: ("local_game", x),
         )
         player_buttons.append(button)
 
@@ -40,18 +38,17 @@ def chose_number_of_player(screen):
         height=40,
         text="Retour",
         font=small_font,
-        callback=lambda: menu_loop(screen),
+        callback=lambda: ("menu", None),
     )
 
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
+                return "quit"
 
             back_result = back_button.handle_event(event)
-            if back_result == "back":
-                return None
+            if back_result is not None:
+                return back_result
 
             for button in player_buttons:
                 result = button.handle_event(event)

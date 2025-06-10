@@ -1,9 +1,8 @@
 import pygame, sys, os
 from view.components.button import Button
-from view.chose_number_of_player import chose_number_of_player
 
 
-def menu_loop(screen):
+def menu_loop(screen, *args, **kwargs):
     clock = pygame.time.Clock()
     width, height = screen.get_size()
 
@@ -25,11 +24,10 @@ def menu_loop(screen):
     buttons = []
     labels = ["Nouvelle Partie", "Charger Partie", "Contre IA", "Quitter"]
     actions = [
-        lambda: print(">> Nouvelle partie"),
-        lambda: chose_number_of_player(screen),
+        lambda: ("chose_players", None),
         lambda: print(">> Charger"),
         lambda: print(">> IA"),
-        lambda: sys.exit(),
+        lambda: "quit",
     ]
 
     for i, (label, action) in enumerate(zip(labels, actions)):
@@ -47,10 +45,12 @@ def menu_loop(screen):
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
+                return "quit"
+
             for button in buttons:
-                button.handle_event(event)
+                result = button.handle_event(event)
+                if result is not None:
+                    return result
 
         screen.blit(bg, (0, 0))
         screen.blit(banner_image, banner_rect)
