@@ -10,18 +10,15 @@ class ScreenManager:
         self.running = True
 
     def register_screen(self, screen_name: str, screen_func: Callable) -> None:
-        """Register a screen function with a name."""
         self.screen_data[screen_name] = screen_func
 
     def switch_screen(self, screen_name: str, *args, **kwargs) -> None:
-        """Switch to a different screen."""
         if screen_name in self.screen_data:
             self.current_screen = self.screen_data[screen_name]
             self.current_screen_args = args
             self.current_screen_kwargs = kwargs
 
     def run(self) -> None:
-        """Main game loop."""
         clock = pygame.time.Clock()
 
         while self.running:
