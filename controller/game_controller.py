@@ -1,105 +1,128 @@
-# controller/game_controller.py
-
 from models.cards import (
     Deck,
     all_habitants,
     all_lieux,
     all_penalites,
     HabitantCard,
+    LOCATIONS,
 )
+from models.dice import DiceSet
+
 
 class GameController:
-    """
-    Gère :
-      - l’ordre des joueurs (1…N)
-      - les decks et leurs πoche + défausse
-      - cartes habitants et cartes lieux visibles
-      - recrutement / pénalité
-      - fin de partie + calcul de scores/gagnants
-    """
+
     def __init__(self, num_players):
         self.num_players = num_players
         self.current_player = 1
         self.kingdoms = {i: [] for i in range(1, num_players + 1)}
 
-        # Crée des decks INDEPENDANTS pour chaque partie
-        self.hab_deck   = Deck(list(all_habitants))
-        self.lieu_deck  = Deck(list(all_lieux))
-        self.pen_deck   = Deck(list(all_penalites))
+        self.hab_deck = Deck(list(all_habitants))
+        self.lieu_deck = Deck(list(all_lieux))
+        self.pen_deck = Deck(list(all_penalites))
         self.hab_deck.shuffle()
         self.lieu_deck.shuffle()
         self.pen_deck.shuffle()
 
-        # Cartes habitants visibles (4) et lieux visibles (4)
-        self.visible_habitants = [self.hab_deck.draw() for _ in range(4)]
-        self.visible_lieux     = [self.lieu_deck.draw() for _ in range(4)]
+        self.lieu_piles = {}
+        for loc_name, color in LOCATIONS.items():
+            self.lieu_piles[loc_name] = []
+            for value in [4, 3, 2]:
+                for card in self.lieu_deck.draw_pile:
+                    if card.name == loc_name and card.value == value:
+                        self.lieu_piles[loc_name].append(card)
+                        self.lieu_deck.draw_pile.remove(card)
+                        break
+
+        self.visible_habitants = [self.hab_deck.draw() for _ in range(5)]
+
+        self.dice_set = DiceSet()
+        self.rolls_left = 3
 
     def next_player(self):
-        """Passe au joueur suivant (1→2→…→N→1)."""
         self.current_player = (self.current_player % self.num_players) + 1
+        self.rolls_left = 3
+        self.dice_set.unlock_all()
+
+    def roll_dice(self, locked_indices=None):
+        if self.rolls_left <= 0:
+            return False
+
+        self.dice_set.unlock_all()
+        if locked_indices:
+            for idx in locked_indices:
+                self.dice_set.lock_die(idx)
+
+        self.dice_set.roll_all()
+        self.rolls_left -= 1
+        return True
+
+    def get_dice_state(self):
+        return (
+            self.dice_set.get_values(),
+            self.dice_set.get_locked_indices(),
+            self.rolls_left,
+        )
 
     def apply_roll(self, dice_values):
-        """Retourne la première HabitantCard satisfaite, ou None."""
         for card in self.visible_habitants:
             if isinstance(card, HabitantCard) and card.is_combo_met(dice_values):
                 return card
         return None
 
-    def recruit_or_penalize(self, dice_values):
+    def recruit_or_penalize(self):
         """
-        Si combo trouvé : recrutement, sinon pénalité.
-        Met à jour kingdoms, visible_habitants et visible_lieux.
+        If combo found: recruitment, else penalty.
+        Updates kingdoms, visible_habitants and lieu_piles.
+        Returns (card, was_penalty).
         """
         player = self.current_player
+        dice_values = self.dice_set.get_values()
         card = self.apply_roll(dice_values)
 
         if card:
-            # Recruter l’habitant
             self.kingdoms[player].append(card)
             idx = self.visible_habitants.index(card)
+
+            for loc_name, pile in self.lieu_piles.items():
+                if pile and pile[-1].color == card.color:
+                    self.kingdoms[player].append(pile.pop())
+                    break
+
             self.visible_habitants[idx] = self.hab_deck.draw()
-            # Si couleur match un lieu visible, on pourrait gérer bonus ici
             return card, False
         else:
-            # Pénalité
+            # Penalty
             pen = self.pen_deck.draw()
             if pen:
                 self.kingdoms[player].append(pen)
-            # Remplace la dernière habitant
-            discarded = self.visible_habitants.pop(-1)
-            if discarded:
-                self.hab_deck.discard_card(discarded)
-            self.visible_habitants.insert(0, self.hab_deck.draw())
-            # Remplace la dernière lieu
-            discarded_l = self.visible_lieux.pop(-1)
-            if discarded_l:
-                self.lieu_deck.discard_card(discarded_l)
-            self.visible_lieux.insert(0, self.lieu_deck.draw())
+
+            if self.visible_habitants:
+                discarded = self.visible_habitants.pop(-1)
+                if discarded:
+                    self.hab_deck.discard_card(discarded)
+
+            new_card = self.hab_deck.draw()
+            if new_card:
+                self.visible_habitants.insert(0, new_card)
+
             return pen, True
 
     def get_visible_cards(self):
-        """Retourne (hab, lieux)."""
-        return self.visible_habitants.copy(), self.visible_lieux.copy()
+        return self.visible_habitants.copy(), {
+            k: v[:] for k, v in self.lieu_piles.items()
+        }
 
     def is_game_over(self):
-        """Vrai quand on ne peut plus réapprovisionner les habitants."""
-        return len(self.hab_deck.draw_pile) == 0
+        return len(self.hab_deck.draw_pile) == 0 or all(
+            len(pile) == 0 for pile in self.lieu_piles.values()
+        )
 
     def calculate_scores(self):
-        """
-        Score = #habitants +3×#lieux – pénalités.
-        """
         scores = {i: 0 for i in range(1, self.num_players + 1)}
         for player, cards in self.kingdoms.items():
-            for c in cards:
-                if c is None:
-                    continue
-                if c.card_type == "habitant":
-                    scores[player] += 1
-                elif c.card_type == "lieu":
-                    scores[player] += 3
-                elif c.card_type == "penalite":
-                    scores[player] -= c.penalty_points
+            for card in cards:
+                if card is not None:
+                    scores[player] += card.points
         return scores
 
     def get_winner(self):

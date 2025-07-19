@@ -10,18 +10,14 @@ def run_game():
     screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
     pygame.display.set_caption("Roi & Compagnie 👑")
 
-    # Initialize screen manager
     screen_manager = ScreenManager(screen)
 
-    # Register all screens
     screen_manager.register_screen("menu", menu_loop)
     screen_manager.register_screen("chose_players", chose_number_of_player)
     screen_manager.register_screen("local_game", local_game_loop)
 
-    # Start with the menu screen
     screen_manager.switch_screen("menu")
 
-    # Run the game
     screen_manager.run()
 
 

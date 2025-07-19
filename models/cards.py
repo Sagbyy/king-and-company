@@ -1,134 +1,125 @@
 import random
 
+
 class Card:
-    """Classe de base pour toutes les cartes."""
-    def __init__(self, name, color, card_type):
-        """
-        name      : str, nom de la carte
-        color     : str ou None, couleur associée
-        card_type : str, "habitant", "lieu" ou "penalite"
-        """
+
+    def __init__(self, name, color, card_type, points=0):
         self.name = name
         self.color = color
         self.card_type = card_type
+        self.points = points
 
     def __repr__(self):
-        return f"<{self.card_type.title()} {self.name} ({self.color})>"
+        return (
+            f"<{self.card_type.title()} {self.name} ({self.color}) [{self.points}pts]>"
+        )
+
 
 class HabitantCard(Card):
-    """Carte d’habitant, avec condition de combo de dés."""
-    def __init__(self, name, color, combo):
-        """
-        combo : dict {face: min_count, …}
-        ex. {6:3} pour « trois 6 », {2:2,5:1} pour « deux 2 + un 5 ».
-        """
-        super().__init__(name, color, "habitant")
+
+    def __init__(self, name, color, combo, points=1):
+        super().__init__(name, color, "habitant", points)
         self.combo = combo
 
     def is_combo_met(self, dice_values):
-        """
-        Retourne True si dice_values (liste d’int) satisfait self.combo.
-        """
         for face, needed in self.combo.items():
             if dice_values.count(face) < needed:
                 return False
         return True
 
+
 class LieuCard(Card):
-    """Carte de lieu, éventuellement liée à un habitant préalable."""
-    def __init__(self, name, color, prereq_habitant=None):
-        """
-        prereq_habitant : str ou None, nom d’habitant requis pour bonus.
-        """
-        super().__init__(name, color, "lieu")
-        self.prereq_habitant = prereq_habitant
+
+    def __init__(self, name, color, value):
+        super().__init__(name, color, "lieu", points=value)
+        self.value = value
+
 
 class PenaliteCard(Card):
-    """Carte de pénalité (malus)."""
+
     def __init__(self, name, penalty_points):
-        """
-        penalty_points : int, nombre de points négatifs.
-        """
-        super().__init__(name, None, "penalite")
+        super().__init__(name, None, "penalite", points=-penalty_points)
         self.penalty_points = penalty_points
 
+
 class Deck:
-    """Gère une pioche + défausse de cartes."""
+
     def __init__(self, cards):
-        """
-        cards : liste d’instances de Card.
-        """
-        self.draw_pile = cards[:]  # copie
+        self.draw_pile = cards[:] 
         self.discard = []
 
     def shuffle(self):
-        """Mélange la pioche."""
         random.shuffle(self.draw_pile)
 
     def draw(self):
-        """
-        Pioche la carte du dessus (index 0).
-        Retourne None si la pioche est vide.
-        """
         if not self.draw_pile:
-            return None
+            if self.discard:
+                self.draw_pile = self.discard[:]
+                self.discard = []
+                self.shuffle()
+            else:
+                return None
         return self.draw_pile.pop(0)
 
     def discard_card(self, card):
-        """Ajoute une carte à la défausse."""
         self.discard.append(card)
 
-# ————— Prototypes étendus de cartes —————
+
+LOCATIONS = {
+    "Ville": "blue",
+    "Mine": "red",
+    "Atelier": "green",
+    "Village des orcs": "red",
+    "Forêt enchantée": "green",
+}
+
+all_lieux = []
+for name, color in LOCATIONS.items():
+    for value in [2, 3, 4]:
+        all_lieux.append(LieuCard(name, color, value))
 
 all_habitants = [
-    HabitantCard("Chevalier",    "rouge",  {6:3}),
-    HabitantCard("Marchand",     "bleu",   {5:2, 2:1}),
-    HabitantCard("Forgeron",     "vert",   {4:3}),
-    HabitantCard("Pêcheur",      "bleu",   {1:2, 3:2}),
-    HabitantCard("Alchimiste",   "vert",   {2:3}),
-    HabitantCard("Moine",        "rouge",  {1:4}),
-    HabitantCard("Paysan",       "jaune",  {3:2, 4:1}),
-    HabitantCard("Barde",        "jaune",  {2:1, 6:1}),
-    HabitantCard("Apothicaire",  "vert",   {5:3}),
-    HabitantCard("Charpentier",  "rouge",  {2:2, 4:1}),
-    HabitantCard("Messager",     "jaune",  {6:1, 3:1}),
-    HabitantCard("Artisan",      "bleu",   {3:3}),
-    HabitantCard("Jardinier",    "vert",   {4:2, 1:1}),
-    HabitantCard("Cuisinier",    "jaune",  {2:3}),
-    HabitantCard("Écuyer",       "rouge",  {6:2, 5:1}),
-    HabitantCard("Scribe",       "bleu",   {1:3, 2:1}),
-    HabitantCard("Guerrier",     "vert",   {3:3}),
-    HabitantCard("Sorcière",     "rouge",  {5:1, 1:1, 6:1}),
-]
-
-all_lieux = [
-    LieuCard("Château",         "rouge",  prereq_habitant="Chevalier"),
-    LieuCard("Port",            "bleu",   prereq_habitant="Marchand"),
-    LieuCard("Forge",           "vert",   prereq_habitant="Forgeron"),
-    LieuCard("Abbaye",          "rouge",  prereq_habitant="Moine"),
-    LieuCard("Place du Marché", "jaune",  prereq_habitant="Marchand"),
-    LieuCard("Taverne",         "jaune",  prereq_habitant="Barde"),
-    LieuCard("Laboratoire",     "vert",   prereq_habitant="Alchimiste"),
-    LieuCard("Jardin Royal",    "vert",   prereq_habitant="Jardinier"),
-    LieuCard("Académie",        "bleu",   prereq_habitant="Scribe"),
-    LieuCard("Tour d’Étude",    "jaune",  prereq_habitant="Guerrier"),
+    HabitantCard("Marchand", "blue", {5: 2, 2: 1}),
+    HabitantCard("Artisan", "blue", {3: 3}),
+    HabitantCard("Pêcheur", "blue", {1: 2, 3: 2}),
+    HabitantCard("Scribe", "blue", {1: 3, 2: 1}),
+    HabitantCard("Noble", "blue", {6: 2, 4: 1}),
+    HabitantCard("Architecte", "blue", {4: 2, 5: 1}),
+    HabitantCard("Marin", "blue", {2: 2, 3: 1}),
+    HabitantCard("Érudit", "blue", {5: 3}),
+    HabitantCard("Mineur", "red", {4: 3}),
+    HabitantCard("Forgeron", "red", {6: 2, 3: 1}),
+    HabitantCard("Guerrier", "red", {5: 2, 1: 1}),
+    HabitantCard("Chef Orc", "red", {6: 3}),
+    HabitantCard("Chasseur", "red", {3: 2, 4: 1}),
+    HabitantCard("Éclaireur", "red", {2: 2, 5: 1}),
+    HabitantCard("Berserker", "red", {1: 4}),
+    HabitantCard("Chamane", "red", {4: 2, 6: 1}),
+    HabitantCard("Alchimiste", "green", {5: 2, 2: 1}),
+    HabitantCard("Herboriste", "green", {3: 2, 1: 2}),
+    HabitantCard("Druide", "green", {4: 3}),
+    HabitantCard("Enchanteur", "green", {6: 2, 5: 1}),
+    HabitantCard("Elfe", "green", {2: 3}),
+    HabitantCard("Ranger", "green", {1: 2, 6: 1}),
+    HabitantCard("Sage", "green", {3: 3}),
+    HabitantCard("Apprenti", "green", {4: 2, 2: 1}),
 ]
 
 all_penalites = [
-    PenaliteCard("Inondation", 1),
-    PenaliteCard("Peste",      2),
+    PenaliteCard("Dragon", 3),
+    PenaliteCard("Peste", 2),
     PenaliteCard("Sécheresse", 1),
-    PenaliteCard("Tempête",    2),
-    PenaliteCard("Famine",     3),
-    PenaliteCard("Épidémie",   2),
-    PenaliteCard("Éruption",   3),
-    PenaliteCard("Raid Barbare",2),
+    PenaliteCard("Tempête", 2),
+    PenaliteCard("Famine", 2),
+    PenaliteCard("Invasion", 3),
+    PenaliteCard("Trahison", 2),
+    PenaliteCard("Malédiction", 1),
+    PenaliteCard("Brigands", 2),
+    PenaliteCard("Incendie", 2),
 ]
 
-# ————— Création et mélange des decks pour chaque partie —————
-
 habitant_deck = Deck(all_habitants)
-lieu_deck     = Deck(all_lieux)
+lieu_deck = Deck(all_lieux)
 penalite_deck = Deck(all_penalites)
 
 habitant_deck.shuffle()

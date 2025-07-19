@@ -1,51 +1,95 @@
-# King & Company 👑
+# King and Company
 
-A Pygame-based game project that puts you in the role of a monarch managing their kingdom and company.
+A digital adaptation of the dice and card game where players compete to build the most prosperous kingdom.
 
-## Description
+## 🎯 Game Objective
 
-King & Company is an interactive game where players take on the role of a monarch, making strategic decisions to manage their kingdom and business ventures. The game features a full-screen interface and an engaging menu system to guide players through their royal journey.
+As a newly crowned king, your mission is to populate your kingdom by recruiting the most valuable inhabitants. You must achieve specific dice combinations to convince these characters to join your realm. The player with the most victory points at the end of the game wins.
 
-## Prerequisites
+## 🎲 Game Components
 
-- Python 3.x
-- Pygame 2.6.1
+- 6 colored dice (2 red, 2 green, 2 blue)
+- 65 cards:
+  - 40 inhabitant cards
+  - 15 location cards (5 locations × 3 values each)
+  - 10 penalty cards
 
-## Installation
+## 🛠 Game Setup
 
-1. Clone the repository:
+1. Location cards: Sorted by color into 5 piles for:
 
-```bash
-git clone https://github.com/yourusername/king-and-company.git
-cd king-and-company
-```
+   - Ville (City)
+   - Mine
+   - Atelier (Workshop)
+   - Village des orcs (Orc Village)
+   - Forêt enchantée (Enchanted Forest)
+     Each pile contains cards valued 2 (top), 3 (middle), and 4 (bottom).
 
-2. Create and activate a virtual environment (recommended):
+2. Inhabitant cards: Shuffled face-down. The top 5 cards are placed face-up below the location piles.
 
-```bash
-python -m venv .venv
-source .venv/bin/activate  # On Windows, use: .venv\Scripts\activate
-```
+3. Penalty cards: Shuffled and placed face-up to the right of the inhabitant cards.
 
-3. Install the required dependencies:
+4. Each player starts with an empty kingdom.
 
-```bash
-pip install -r requirements.txt
-```
+## 🔄 Turn Sequence
 
-## Running the Game
+The game proceeds clockwise, starting with the oldest player. Each turn has three phases:
 
-To start the game, run:
+1. Rolling Dice:
+
+   - Roll all 6 dice up to three times
+   - After each roll, you can set aside any number of dice and reroll the others
+   - Your goal is to achieve a combination matching one of the visible inhabitant cards
+
+2. Recruiting or Taking a Penalty:
+
+   - If you succeed in making a combination:
+     - Take the matching inhabitant card and add it to your kingdom
+     - If this card matches the color of a location, you may also take that location card
+   - If you fail to make any combination:
+     - Take the top penalty card and add it to your kingdom
+     - Discard the rightmost inhabitant card
+
+3. Replenishing Cards:
+   - Shift remaining inhabitant cards to the right to fill empty spaces
+   - Draw a new inhabitant card and place it on the far left
+
+## 🏆 Scoring
+
+- Inhabitant cards: +1 point each
+- Location cards: +2 to +4 points (as shown on card)
+- Penalty cards: -1 to -3 points (as shown on card)
+
+The player with the highest total score wins!
+
+## 🖥 Technical Requirements
+
+- Python 3.8+
+- Required packages (see requirements.txt)
+
+## 🚀 Installation
+
+1. Clone the repository
+2. Create a virtual environment:
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+   ```
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+## 🎮 Running the Game
 
 ```bash
 python main.py
 ```
 
-## Development
+## 🤝 Contributing
 
-The project follows a Model-View-Controller (MVC) architecture:
+Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
-- **View**: Contains all UI-related code and screen management
-- **Controller**: Handles game logic and state management
-- **Assets**: Stores all game resources
-- **Config**: Contains configuration files and settings
+## 📜 License
+
+[MIT](https://choosealicense.com/licenses/mit/)
