@@ -70,9 +70,9 @@ def local_game_loop(screen, game_or_players, *args, **kwargs):
             img = pygame.Surface(size)
             # couleur selon type
             if ctype == "habitant":
-                img.fill((70, 130, 180))  # steelblue
+                img.fill((70, 130, 180))  # Bleu
             else:
-                img.fill((139, 69, 19))  # saddlebrown
+                img.fill((139, 69, 19))  # Marron
             # nom centré
             txt = small_font.render(card.name, True, (255, 255, 255))
             tr = txt.get_rect(center=(size[0] // 2, size[1] // 2))
