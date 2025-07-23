@@ -4,6 +4,7 @@ from view.components.button import Button
 from controller.game_controller import GameController
 from models.dice import Dice
 
+
 def local_game_loop(screen, number_of_players, *args, **kwargs):
     """
     Écran de jeu local avec gestion des images de cartes manquantes.
@@ -18,27 +19,27 @@ def local_game_loop(screen, number_of_players, *args, **kwargs):
     bg = pygame.transform.scale(bg, (width, height))
 
     # Polices
-    font_path   = os.path.join("assets", "fonts", "medieval.ttf")
-    title_font  = pygame.font.Font(font_path, 36)
-    small_font  = pygame.font.Font(font_path, 24)
+    font_path = os.path.join("assets", "fonts", "medieval.ttf")
+    title_font = pygame.font.Font(font_path, 36)
+    small_font = pygame.font.Font(font_path, 24)
 
     # État du tour
     rolls_remaining = 3
-    dice_list       = [Dice(6, "white") for _ in range(6)]
-    dice_values     = [0]*6
-    validated       = False
-    result_card     = None
-    is_penalty      = False
+    dice_list = [Dice(6, "white") for _ in range(6)]
+    dice_values = [0] * 6
+    validated = False
+    result_card = None
+    is_penalty = False
 
     # Fin de partie
-    game_over     = False
-    winners       = []
+    game_over = False
+    winners = []
     winning_score = None
 
     # Cache pour images et placeholders
     image_cache = {}
 
-    def load_card_image(card, ctype, size=(120,160)):
+    def load_card_image(card, ctype, size=(120, 160)):
         """
         Tente de charger assets/cards/{ctype}/{card.name}.png
         Si absent, retourne un placeholder coloré avec le texte.
@@ -58,10 +59,10 @@ def local_game_loop(screen, number_of_players, *args, **kwargs):
             if ctype == "habitant":
                 img.fill((70, 130, 180))  # steelblue
             else:
-                img.fill((139, 69, 19))   # saddlebrown
+                img.fill((139, 69, 19))  # saddlebrown
             # nom centré
-            txt = small_font.render(card.name, True, (255,255,255))
-            tr = txt.get_rect(center=(size[0]//2, size[1]//2))
+            txt = small_font.render(card.name, True, (255, 255, 255))
+            tr = txt.get_rect(center=(size[0] // 2, size[1] // 2))
             img.blit(txt, tr)
         image_cache[key] = img
         return img
@@ -69,7 +70,7 @@ def local_game_loop(screen, number_of_players, *args, **kwargs):
     # Callbacks
     def do_roll():
         nonlocal rolls_remaining, dice_values
-        if rolls_remaining>0 and not validated and not game_over:
+        if rolls_remaining > 0 and not validated and not game_over:
             for i, die in enumerate(dice_list):
                 dice_values[i] = die.roll()
             rolls_remaining -= 1
@@ -90,19 +91,39 @@ def local_game_loop(screen, number_of_players, *args, **kwargs):
         if not game_over:
             controller.next_player()
             rolls_remaining = 3
-            dice_values     = [0]*6
-            validated       = False
-            result_card     = None
-            is_penalty      = False
+            dice_values = [0] * 6
+            validated = False
+            result_card = None
+            is_penalty = False
         else:
             return "menu", None
         return None
 
     # Boutons
-    back_button     = Button(20, 210, 100, 40, "Retour",   small_font, callback=lambda:("menu",None))
-    roll_button     = Button(width//2-75, height-180, 150,50, "Lancer",  small_font, callback=do_roll)
-    validate_button = Button(width//2-75, height-120, 150,50, "Valider", small_font, callback=validate_action)
-    next_button     = Button(width-150,  height-70,  130,50, "Suivant", small_font, callback=next_turn_action)
+    back_button = Button(
+        20, 210, 100, 40, "Retour", small_font, callback=lambda: ("menu", None)
+    )
+    roll_button = Button(
+        width // 2 - 75, height - 180, 150, 50, "Lancer", small_font, callback=do_roll
+    )
+    validate_button = Button(
+        width // 2 - 75,
+        height - 120,
+        150,
+        50,
+        "Valider",
+        small_font,
+        callback=validate_action,
+    )
+    next_button = Button(
+        width - 150,
+        height - 70,
+        130,
+        50,
+        "Suivant",
+        small_font,
+        callback=next_turn_action,
+    )
 
     # Boucle principale
     while True:
@@ -119,11 +140,13 @@ def local_game_loop(screen, number_of_players, *args, **kwargs):
         # Scores à gauche
         scores = controller.calculate_scores()
         panel = pygame.Surface((200, height), pygame.SRCALPHA)
-        panel.fill((30,30,30,200))
-        screen.blit(panel, (0,0))
-        for i in range(1, number_of_players+1):
-            txt = small_font.render(f"Joueur {i}: {scores[i]} pts", True, (255,255,255))
-            screen.blit(txt, (10, 20 + (i-1)*30))
+        panel.fill((30, 30, 30, 200))
+        screen.blit(panel, (0, 0))
+        for i in range(1, number_of_players + 1):
+            txt = small_font.render(
+                f"Joueur {i}: {scores[i]} pts", True, (255, 255, 255)
+            )
+            screen.blit(txt, (10, 20 + (i - 1) * 30))
 
         # Cartes visibles en haut
         vis_hab, vis_lieu = controller.get_visible_cards()
@@ -132,53 +155,89 @@ def local_game_loop(screen, number_of_players, *args, **kwargs):
         y_hab = 20
         for idx, card in enumerate(vis_hab):
             if card:
-                img = load_card_image(card, "habitant", (card_w,card_h))
-                screen.blit(img, (start_x + idx*(card_w+10), y_hab))
+                img = load_card_image(card, "habitant", (card_w, card_h))
+                screen.blit(img, (start_x + idx * (card_w + 10), y_hab))
         y_lieu = y_hab + card_h + 10
         for idx, card in enumerate(vis_lieu):
             if card:
-                img = load_card_image(card, "lieu", (card_w,card_h))
-                screen.blit(img, (start_x + idx*(card_w+10), y_lieu))
+                img = load_card_image(card, "lieu", (card_w, card_h))
+                screen.blit(img, (start_x + idx * (card_w + 10), y_lieu))
 
         if not game_over:
             # Dés
-            for idx, val in enumerate(dice_values):
-                x = width//2 -180 + (idx%3)*120
-                y = height//2 -50  + (idx//3)*100
-                rect = pygame.Rect(x-25,y-25,50,50)
-                pygame.draw.rect(screen,(200,200,200),rect,2)
-                txt = small_font.render(str(val), True, (255,255,255))
-                screen.blit(txt, txt.get_rect(center=(x,y)))
+            for idx, (die, val) in enumerate(zip(dice_list, dice_values)):
+                x = width // 2 - 180 + (idx % 3) * 120
+                y = height // 2 - 50 + (idx // 3) * 100
+                rect = pygame.Rect(x - 25, y - 25, 50, 50)
+                # Convertir la couleur du texte en RGB
+                color_name = die.get_color().lower()
+                if color_name == "white":
+                    color = (255, 255, 255)
+                elif color_name == "red":
+                    color = (255, 0, 0)
+                elif color_name == "blue":
+                    color = (0, 0, 255)
+                elif color_name == "green":
+                    color = (0, 255, 0)
+                elif color_name == "yellow":
+                    color = (255, 255, 0)
+                else:
+                    color = (255, 255, 255)  # Couleur par défaut
+
+                pygame.draw.rect(screen, color, rect)
+                pygame.draw.rect(screen, (50, 50, 50), rect, 2)  # Bordure plus foncée
+                txt = small_font.render(
+                    str(val), True, (0, 0, 0)
+                )  # Texte en noir pour contraste
+                screen.blit(txt, txt.get_rect(center=(x, y)))
 
             # Infos du tour
-            p_txt = title_font.render(f"Joueur {controller.current_player}", True, (30,20,0))
-            screen.blit(p_txt, p_txt.get_rect(center=(width//2,50)))
-            rem = small_font.render(f"Relances : {rolls_remaining}", True, (255,255,0))
-            screen.blit(rem, (220, height-40))
+            p_txt = title_font.render(
+                f"Joueur {controller.current_player}", True, (30, 20, 0)
+            )
+            screen.blit(p_txt, p_txt.get_rect(center=(width // 2, 50)))
+            rem = small_font.render(
+                f"Relances : {rolls_remaining}", True, (255, 255, 0)
+            )
+            screen.blit(rem, (220, height - 40))
 
             if validated and result_card:
-                label = (f"+ {result_card.name}" if not is_penalty else f"- {result_card.name}")
-                clr   = (0,200,0) if not is_penalty else (200,0,0)
-                info  = small_font.render(label, True, clr)
-                screen.blit(info, info.get_rect(center=(width//2, height//2+150)))
+                label = (
+                    f"+ {result_card.name}"
+                    if not is_penalty
+                    else f"- {result_card.name}"
+                )
+                clr = (0, 200, 0) if not is_penalty else (200, 0, 0)
+                info = small_font.render(label, True, clr)
+                screen.blit(info, info.get_rect(center=(width // 2, height // 2 + 150)))
 
         else:
             # Overlay fin de partie
             overlay = pygame.Surface((width, height), pygame.SRCALPHA)
-            overlay.fill((0,0,0,180))
-            screen.blit(overlay, (0,0))
+            overlay.fill((0, 0, 0, 180))
+            screen.blit(overlay, (0, 0))
 
-            over_surf = title_font.render("PARTIE TERMINÉE", True, (255,255,255))
-            screen.blit(over_surf, over_surf.get_rect(center=(width//2, height//2-100)))
-
-            win_str = "Gagnant" + ("s" if len(winners)>1 else "")
-            win_surf = small_font.render(
-                f"{win_str} : {', '.join('Joueur '+str(w) for w in winners)}", True, (255,255,0)
+            over_surf = title_font.render("PARTIE TERMINÉE", True, (255, 255, 255))
+            screen.blit(
+                over_surf, over_surf.get_rect(center=(width // 2, height // 2 - 100))
             )
-            screen.blit(win_surf, win_surf.get_rect(center=(width//2, height//2-50)))
 
-            score_surf = small_font.render(f"Score : {winning_score}", True, (255,255,0))
-            screen.blit(score_surf, score_surf.get_rect(center=(width//2, height//2)))
+            win_str = "Gagnant" + ("s" if len(winners) > 1 else "")
+            win_surf = small_font.render(
+                f"{win_str} : {', '.join('Joueur '+str(w) for w in winners)}",
+                True,
+                (255, 255, 0),
+            )
+            screen.blit(
+                win_surf, win_surf.get_rect(center=(width // 2, height // 2 - 50))
+            )
+
+            score_surf = small_font.render(
+                f"Score : {winning_score}", True, (255, 255, 0)
+            )
+            screen.blit(
+                score_surf, score_surf.get_rect(center=(width // 2, height // 2))
+            )
 
         back_button.draw(screen)
         roll_button.draw(screen)
