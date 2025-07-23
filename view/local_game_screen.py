@@ -25,7 +25,14 @@ def local_game_loop(screen, number_of_players, *args, **kwargs):
 
     # État du tour
     rolls_remaining = 3
-    dice_list = [Dice(6, "white") for _ in range(6)]
+    dice_list = [
+        Dice(6, "rouge"),
+        Dice(6, "rouge"),
+        Dice(6, "bleu"),
+        Dice(6, "bleu"),
+        Dice(6, "vert"),
+        Dice(6, "vert"),
+    ]
     dice_values = [0] * 6
     validated = False
     result_card = None
@@ -171,24 +178,19 @@ def local_game_loop(screen, number_of_players, *args, **kwargs):
                 rect = pygame.Rect(x - 25, y - 25, 50, 50)
                 # Convertir la couleur du texte en RGB
                 color_name = die.get_color().lower()
-                if color_name == "white":
-                    color = (255, 255, 255)
-                elif color_name == "red":
-                    color = (255, 0, 0)
-                elif color_name == "blue":
-                    color = (0, 0, 255)
-                elif color_name == "green":
-                    color = (0, 255, 0)
-                elif color_name == "yellow":
-                    color = (255, 255, 0)
+                if color_name == "rouge":
+                    color = (255, 0, 0)     
+                elif color_name == "bleu":
+                    color = (0, 100, 255) 
+                elif color_name == "vert":
+                    color = (0, 180, 0)
                 else:
-                    color = (255, 255, 255)  # Couleur par défaut
+                    color = (255, 255, 255)  # Blanc par défaut
 
                 pygame.draw.rect(screen, color, rect)
                 pygame.draw.rect(screen, (50, 50, 50), rect, 2)  # Bordure plus foncée
-                txt = small_font.render(
-                    str(val), True, (0, 0, 0)
-                )  # Texte en noir pour contraste
+                # Texte en blanc pour toutes les couleurs pour un meilleur contraste
+                txt = small_font.render(str(val), True, (255, 255, 255))
                 screen.blit(txt, txt.get_rect(center=(x, y)))
 
             # Infos du tour
