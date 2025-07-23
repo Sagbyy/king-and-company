@@ -5,14 +5,20 @@ from controller.game_controller import GameController
 from models.dice import Dice
 
 
-def local_game_loop(screen, number_of_players, *args, **kwargs):
+def local_game_loop(screen, game_or_players, *args, **kwargs):
     """
     Écran de jeu local avec gestion des images de cartes manquantes.
+    game_or_players peut être soit un nombre de joueurs (int) soit un GameController
     """
     clock = pygame.time.Clock()
     width, height = screen.get_size()
 
-    controller = GameController(number_of_players)
+    if isinstance(game_or_players, GameController):
+        controller = game_or_players
+        number_of_players = controller.num_players
+    else:
+        number_of_players = game_or_players
+        controller = GameController(number_of_players)
 
     # Fond
     bg = pygame.image.load(os.path.join("assets", "menu_background.jpg")).convert()
@@ -106,6 +112,12 @@ def local_game_loop(screen, number_of_players, *args, **kwargs):
             return "menu", None
         return None
 
+    def save_game_action():
+        """Sauvegarde la partie en cours"""
+        if not game_over:
+            controller.save_game()
+        return None
+
     # Boutons
     back_button = Button(
         20, 210, 100, 40, "Retour", small_font, callback=lambda: ("menu", None)
@@ -131,13 +143,22 @@ def local_game_loop(screen, number_of_players, *args, **kwargs):
         small_font,
         callback=next_turn_action,
     )
+    save_button = Button(
+        20, 150, 100, 40, "Sauver", small_font, callback=save_game_action
+    )
 
     # Boucle principale
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return "quit", None
-            for btn in (back_button, roll_button, validate_button, next_button):
+            for btn in (
+                back_button,
+                roll_button,
+                validate_button,
+                next_button,
+                save_button,
+            ):
                 res = btn.handle_event(event)
                 if res is not None:
                     return res
@@ -179,9 +200,9 @@ def local_game_loop(screen, number_of_players, *args, **kwargs):
                 # Convertir la couleur du texte en RGB
                 color_name = die.get_color().lower()
                 if color_name == "rouge":
-                    color = (255, 0, 0)     
+                    color = (255, 0, 0)
                 elif color_name == "bleu":
-                    color = (0, 100, 255) 
+                    color = (0, 100, 255)
                 elif color_name == "vert":
                     color = (0, 180, 0)
                 else:
@@ -245,6 +266,7 @@ def local_game_loop(screen, number_of_players, *args, **kwargs):
         roll_button.draw(screen)
         validate_button.draw(screen)
         next_button.draw(screen)
+        save_button.draw(screen)
 
         pygame.display.flip()
         clock.tick(60)

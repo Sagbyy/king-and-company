@@ -1,5 +1,3 @@
-# controller/game_controller.py
-
 from models.cards import (
     Deck,
     all_habitants,
@@ -7,6 +5,8 @@ from models.cards import (
     all_penalites,
     HabitantCard,
 )
+from models.save_manager import SaveManager
+
 
 class GameController:
     """
@@ -17,22 +17,23 @@ class GameController:
       - recrutement / pénalité
       - fin de partie + calcul de scores/gagnants
     """
+
     def __init__(self, num_players):
         self.num_players = num_players
         self.current_player = 1
         self.kingdoms = {i: [] for i in range(1, num_players + 1)}
 
         # Crée des decks INDEPENDANTS pour chaque partie
-        self.hab_deck   = Deck(list(all_habitants))
-        self.lieu_deck  = Deck(list(all_lieux))
-        self.pen_deck   = Deck(list(all_penalites))
+        self.hab_deck = Deck(list(all_habitants))
+        self.lieu_deck = Deck(list(all_lieux))
+        self.pen_deck = Deck(list(all_penalites))
         self.hab_deck.shuffle()
         self.lieu_deck.shuffle()
         self.pen_deck.shuffle()
 
         # Cartes habitants visibles (4) et lieux visibles (4)
         self.visible_habitants = [self.hab_deck.draw() for _ in range(4)]
-        self.visible_lieux     = [self.lieu_deck.draw() for _ in range(4)]
+        self.visible_lieux = [self.lieu_deck.draw() for _ in range(4)]
 
     def next_player(self):
         """Passe au joueur suivant (1→2→…→N→1)."""
@@ -109,3 +110,13 @@ class GameController:
         max_score = max(scores.values())
         winners = [p for p, s in scores.items() if s == max_score]
         return winners, max_score
+
+    def save_game(self, save_name=None):
+        """Sauvegarde l'état actuel de la partie"""
+        return SaveManager.save_game(self, save_name)
+
+    @classmethod
+    def load_game(cls, save_name):
+        """Charge une partie sauvegardée"""
+
+        return SaveManager.load_game(save_name)

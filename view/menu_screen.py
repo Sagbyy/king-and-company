@@ -25,7 +25,7 @@ def menu_loop(screen, *args, **kwargs):
     labels = ["Nouvelle Partie", "Charger Partie", "Contre IA", "Quitter"]
     actions = [
         lambda: ("chose_players", None),
-        lambda: print(">> Charger"),
+        lambda: ("load_game", None),
         lambda: print(">> IA"),
         lambda: "quit",
     ]
